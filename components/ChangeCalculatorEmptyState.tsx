@@ -33,8 +33,7 @@ export function ChangeCalculatorEmptyState() {
             Ready for your calculations
           </Text>
           <Text c="dimmed" size="sm" ta="center">
-            Enter owed and paid amounts, then click Compute change. Results will
-            appear here.
+            Use the keypad or switch to Text / File to paste or upload a flat file.
           </Text>
         </Stack>
       </Stack>

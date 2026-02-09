@@ -7,9 +7,8 @@ export function ChangeCalculatorHeader() {
         Creative Cash Draw Solutions
       </Title>
       <Text c="dimmed" size="sm">
-        Enter or upload lines of &quot;amount owed, amount paid&quot; (e.g.
-        2.12,3.00). When the amount owed is divisible by 3, change is returned
-        in random denominations.
+        Use the keypad or paste/upload a file (one line per transaction: owed,paid).
+        When owed is divisible by 3, change uses random denominations.
       </Text>
     </Box>
   );
