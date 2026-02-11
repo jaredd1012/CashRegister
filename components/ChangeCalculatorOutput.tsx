@@ -1,8 +1,82 @@
-import { Box, Button, CopyButton, Paper, Stack, Text } from '@mantine/core';
+import {
+  Box,
+  Button,
+  CopyButton,
+  Group,
+  Paper,
+  Stack,
+  Text,
+} from '@mantine/core';
+import { IconCoin, IconCurrencyDollar } from '@tabler/icons-react';
 import { downloadOutput } from '@/lib/utils';
 
 export interface ChangeCalculatorOutputProps {
   lines: string[];
+}
+
+type DenomPart = { count: number; unit: string };
+
+function parseChangeLine(line: string): DenomPart[] | null {
+  if (!line.trim()) return null;
+  const parts: DenomPart[] = [];
+  const segments = line.split(',').map((s) => s.trim()).filter(Boolean);
+  for (const seg of segments) {
+    const match = seg.match(/^(\d+)\s+(.+)$/);
+    if (match) {
+      parts.push({ count: parseInt(match[1], 10), unit: match[2] });
+    }
+  }
+  return parts.length ? parts : null;
+}
+
+function isDollar(unit: string): boolean {
+  return unit === 'dollar' || unit === 'dollars';
+}
+
+function DenomChip({ count, unit }: DenomPart) {
+  const isBill = isDollar(unit);
+  const Icon = isBill ? IconCurrencyDollar : IconCoin;
+  const color = isBill
+    ? 'var(--mantine-color-green-5)'
+    : unit === 'penny' || unit === 'pennies'
+      ? 'var(--mantine-color-orange-6)'
+      : 'var(--mantine-color-gray-4)';
+  return (
+    <Group
+      gap={6}
+      style={{
+        background: 'var(--mantine-color-dark-6)',
+        borderRadius: 8,
+        padding: '0.35rem 0.6rem',
+      }}
+    >
+      <Icon color={color} size={18} stroke={1.5} />
+      <Text size="sm">
+        <Text span fw={600}>
+          {count}
+        </Text>{' '}
+        {unit}
+      </Text>
+    </Group>
+  );
+}
+
+function ChangeLine({ line }: { line: string }) {
+  const parts = parseChangeLine(line);
+  if (!parts) {
+    return (
+      <Text c="dimmed" size="sm">
+        {line || '\u00A0'}
+      </Text>
+    );
+  }
+  return (
+    <Group gap="xs" wrap="wrap">
+      {parts.map((p, i) => (
+        <DenomChip count={p.count} key={i} unit={p.unit} />
+      ))}
+    </Group>
+  );
 }
 
 export function ChangeCalculatorOutput({ lines }: ChangeCalculatorOutputProps) {
@@ -37,11 +111,9 @@ export function ChangeCalculatorOutput({ lines }: ChangeCalculatorOutputProps) {
             </Button>
           </Box>
         </Box>
-        <Stack gap="xs">
+        <Stack gap="md">
           {lines.map((line, i) => (
-            <Text key={i} size="sm" style={{ fontFamily: 'monospace' }}>
-              {line || '\u00A0'}
-            </Text>
+            <ChangeLine key={i} line={line} />
           ))}
         </Stack>
       </Stack>

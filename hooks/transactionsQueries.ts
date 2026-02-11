@@ -11,8 +11,11 @@ export type Transaction = {
   output_lines: string[];
 };
 
-async function fetchTransactions(): Promise<Transaction[]> {
-  const res = await fetch(`${API_BASE}/api/transactions`);
+async function fetchTransactions(limit?: number): Promise<Transaction[]> {
+  const url = limit
+    ? `${API_BASE}/api/transactions?limit=${limit}`
+    : `${API_BASE}/api/transactions`;
+  const res = await fetch(url);
   if (!res.ok) {
     throw new Error('Failed to fetch transactions');
   }
@@ -21,11 +24,12 @@ async function fetchTransactions(): Promise<Transaction[]> {
 
 export const transactionsQueryKeys = {
   all: () => ['transactions'] as const,
+  list: (limit?: number) => ['transactions', limit] as const,
 };
 
-export function useTransactionsQuery() {
+export function useTransactionsQuery(limit?: number) {
   return useQuery({
-    queryKey: transactionsQueryKeys.all(),
-    queryFn: fetchTransactions,
+    queryKey: transactionsQueryKeys.list(limit),
+    queryFn: () => fetchTransactions(limit),
   });
 }

@@ -33,7 +33,7 @@ export function ChangeCalculatorEmptyState() {
             Ready for your calculations
           </Text>
           <Text c="dimmed" size="sm" ta="center">
-            Use the keypad or switch to Text / File to paste or upload a flat file.
+            Use the keypad or switch to Text to paste transactions.
           </Text>
         </Stack>
       </Stack>

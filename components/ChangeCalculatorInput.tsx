@@ -1,21 +1,20 @@
-import { Box, Button, Stack, Textarea } from '@mantine/core';
+import { Box, Button, Group, Stack, Textarea } from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
 
 export interface ChangeCalculatorInputProps {
   isPending: boolean;
+  onAddLine: () => void;
   onChange: (value: string) => void;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: () => void;
   value: string;
 }
 
-const SAMPLE_PLACEHOLDER = `2.12,3.00
-1.97,2.00
-3.33,5.00`;
+const PLACEHOLDER = 'amount owed, amount paid';
 
 export function ChangeCalculatorInput({
   isPending,
+  onAddLine,
   onChange,
-  onFileChange,
   onSubmit,
   value,
 }: ChangeCalculatorInputProps) {
@@ -31,13 +30,13 @@ export function ChangeCalculatorInput({
       <Stack gap="md">
         <Textarea
           autosize
-          label="One line per transaction: amount owed, amount paid"
-          minRows={6}
+          label="One line per transaction"
+          minRows={1}
           onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={SAMPLE_PLACEHOLDER}
+          placeholder={PLACEHOLDER}
           value={value}
         />
-        <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <Group gap="sm">
           <Button
             disabled={!value.trim()}
             loading={isPending}
@@ -48,19 +47,14 @@ export function ChangeCalculatorInput({
             Compute change
           </Button>
           <Button
-            component="label"
+            leftSection={<IconPlus size={16} />}
+            onClick={onAddLine}
             radius="lg"
             variant="light"
           >
-            Upload file
-            <input
-              accept=".txt,text/plain"
-              hidden
-              onChange={onFileChange}
-              type="file"
-            />
+            Add line
           </Button>
-        </Box>
+        </Group>
       </Stack>
     </Box>
   );

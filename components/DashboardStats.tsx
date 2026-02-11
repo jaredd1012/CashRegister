@@ -1,33 +1,72 @@
 'use client';
 
-import { Card, Grid, Group, Text, ThemeIcon } from '@mantine/core';
-import { IconReceipt, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
+import { Card, Grid, Group, Loader, Text, ThemeIcon } from '@mantine/core';
+import {
+  IconCoins,
+  IconCurrencyDollar,
+  IconReceipt,
+} from '@tabler/icons-react';
+import { useTransactionsQuery } from '@/hooks/transactionsQueries';
+import { computeStats } from '@/lib/transactionStats';
+import { useEffect, useState } from 'react';
 
-const STATS = [
-  {
-    color: 'blue',
-    icon: IconReceipt,
-    label: 'Transactions',
-    suffix: 'this month',
-    value: '$324.00',
-  },
-  {
-    color: 'green',
-    icon: IconTrendingUp,
-    label: 'Total Profit',
-    suffix: 'from last month',
-    value: '$324.00',
-  },
-  {
-    color: 'red',
-    icon: IconTrendingDown,
-    label: 'Total Expenses',
-    suffix: 'from last month',
-    value: '$324.00',
-  },
-];
+function formatCurrency(n: number): string {
+  return new Intl.NumberFormat('en-US', {
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    style: 'currency',
+  }).format(n);
+}
 
 export function DashboardStats() {
+  const [mounted, setMounted] = useState(false);
+  const { data: transactions = [], isLoading } = useTransactionsQuery(200);
+  const stats = computeStats(transactions);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const STATS = [
+    {
+      color: 'blue' as const,
+      icon: IconReceipt,
+      label: 'Transactions',
+      suffix: 'processed',
+      value: stats.transactionCount.toLocaleString(),
+    },
+    {
+      color: 'green' as const,
+      icon: IconCurrencyDollar,
+      label: 'Total Owed',
+      suffix: 'amount charged',
+      value: formatCurrency(stats.totalOwed),
+    },
+    {
+      color: 'yellow' as const,
+      icon: IconCoins,
+      label: 'Change Given',
+      suffix: 'from drawer',
+      value: formatCurrency(stats.changeGiven),
+    },
+  ];
+
+  if (!mounted || isLoading) {
+    return (
+      <Grid>
+        {[1, 2, 3].map((i) => (
+          <Grid.Col key={i} span={{ base: 12, sm: 4 }}>
+            <Card padding="lg" radius="md" shadow="sm" withBorder>
+              <Group justify="center" py="xl">
+                <Loader size="sm" />
+              </Group>
+            </Card>
+          </Grid.Col>
+        ))}
+      </Grid>
+    );
+  }
+
   return (
     <Grid>
       {STATS.map((stat) => {
@@ -48,9 +87,6 @@ export function DashboardStats() {
               </Text>
               <Text c="dimmed" size="sm">
                 {stat.label}
-              </Text>
-              <Text c={stat.color} mt="sm" size="sm">
-                +40%
               </Text>
             </Card>
           </Grid.Col>

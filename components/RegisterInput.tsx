@@ -2,14 +2,14 @@
 
 import {
   ActionIcon,
+  Badge,
   Box,
   Button,
-  Divider,
   Group,
   Stack,
   Text,
 } from '@mantine/core';
-import { IconTrash, IconUpload } from '@tabler/icons-react';
+import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { useCallback, useState } from 'react';
 import { RegisterDisplay } from './RegisterDisplay';
 import { RegisterKeypad } from './RegisterKeypad';
@@ -18,7 +18,6 @@ export type TransactionPair = { owed: string; paid: string };
 
 export interface RegisterInputProps {
   isPending: boolean;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (inputText: string) => void;
   onTransactionsChange: (tx: TransactionPair[]) => void;
   transactions: TransactionPair[];
@@ -39,7 +38,6 @@ function parseAmount(s: string): number {
 
 export function RegisterInput({
   isPending,
-  onFileChange,
   onSubmit,
   onTransactionsChange,
   transactions,
@@ -50,6 +48,9 @@ export function RegisterInput({
 
   const displayValue = currentAmount || (owedAmount ? '' : '0.00');
   const label = owedAmount ? 'Amount paid' : 'Amount owed';
+  const stepHint = owedAmount
+    ? `Owed $${parseFloat(owedAmount).toFixed(2)} set — enter paid amount, press Enter`
+    : 'Enter amount owed, press Enter or tap Amount owed';
 
   const handleKeyPress = useCallback((key: string) => {
     if (key === 'backspace') {
@@ -66,6 +67,13 @@ export function RegisterInput({
       setCurrentAmount('');
     }
   }, [currentAmount]);
+
+  const handleClearOwed = useCallback(() => {
+    if (owedAmount) {
+      setCurrentAmount(owedAmount);
+      setOwedAmount(null);
+    }
+  }, [owedAmount]);
 
   const handlePaid = useCallback(() => {
     const paid = currentAmount || '0';
@@ -92,41 +100,44 @@ export function RegisterInput({
     onSubmit(inputText);
   }, [onSubmit, transactions]);
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (owedAmount) {
+          handlePaid();
+        } else if (currentAmount) {
+          handleOwed();
+        } else if (hasTransactions) {
+          handleCompute();
+        }
+        return;
+      }
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleKeyPress('backspace');
+        return;
+      }
+      if (/^[0-9.]$/.test(e.key)) {
+        e.preventDefault();
+        handleKeyPress(e.key);
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        e.preventDefault();
+      }
+    },
+    [
+      currentAmount,
+      handleCompute,
+      handleKeyPress,
+      handleOwed,
+      handlePaid,
+      hasTransactions,
+      owedAmount,
+    ]
+  );
+
   return (
     <Stack gap="lg">
-      <Box
-        style={{
-          background: 'var(--mantine-color-dark-7)',
-          border: '1px solid var(--mantine-color-dark-4)',
-          borderRadius: 16,
-          padding: '1.5rem',
-        }}
-      >
-        <RegisterDisplay label={label} value={displayValue} />
-        <Box mt="md">
-          <RegisterKeypad onKeyPress={handleKeyPress} />
-        </Box>
-        <Group gap="sm" mt="lg">
-          <Button
-            onClick={handleOwed}
-            radius="lg"
-            size="md"
-            variant="light"
-          >
-            Owed
-          </Button>
-          <Button
-            disabled={!owedAmount && !currentAmount}
-            onClick={handlePaid}
-            radius="lg"
-            size="md"
-            variant="filled"
-          >
-            Paid
-          </Button>
-        </Group>
-      </Box>
-
       {hasTransactions && (
         <Box
           style={{
@@ -137,25 +148,9 @@ export function RegisterInput({
             padding: '1rem',
           }}
         >
-          <Group justify="space-between" mb="xs">
-            <Text c="dimmed" size="xs" tt="uppercase">
-              Transactions
-            </Text>
-            <Button
-              component="label"
-              leftSection={<IconUpload size={16} />}
-              size="xs"
-              variant="subtle"
-            >
-              Upload
-              <input
-                accept=".txt,text/plain"
-                hidden
-                onChange={onFileChange}
-                type="file"
-              />
-            </Button>
-          </Group>
+          <Text c="dimmed" mb="xs" size="xs" tt="uppercase">
+            Transactions
+          </Text>
           <Stack gap={6}>
             {transactions.map((tx, i) => (
               <Group
@@ -182,33 +177,74 @@ export function RegisterInput({
               </Group>
             ))}
           </Stack>
-          <Divider my="sm" />
+        </Box>
+      )}
+
+      <Box
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        style={{
+          background: 'var(--mantine-color-dark-7)',
+          border: '1px solid var(--mantine-color-dark-4)',
+          borderRadius: 16,
+          outline: 'none',
+          padding: '1.5rem',
+        }}
+      >
+        {owedAmount && (
+          <Badge
+            color="green"
+            component="button"
+            leftSection={<IconCheck size={12} />}
+            mb="sm"
+            onClick={handleClearOwed}
+            size="sm"
+            variant="light"
+          >
+            Owed ${parseFloat(owedAmount).toFixed(2)} • click to change
+          </Badge>
+        )}
+        <RegisterDisplay label={label} value={displayValue} />
+        <Text c="dimmed" mt="xs" size="xs">
+          {stepHint}
+        </Text>
+        <Box mt="md">
+          <RegisterKeypad onKeyPress={handleKeyPress} />
+        </Box>
+        <Group justify="space-between" mt="lg">
+          <Group gap="sm">
+            <Button
+              disabled={!!owedAmount || !currentAmount}
+              onClick={handleOwed}
+              radius="lg"
+              size="md"
+              variant="light"
+            >
+              Amount owed
+            </Button>
+            <Button
+              disabled={!owedAmount}
+              onClick={handlePaid}
+              radius="lg"
+              size="md"
+              variant="filled"
+            >
+              Amount paid
+            </Button>
+          </Group>
           <Button
-            fullWidth
+            disabled={!hasTransactions}
             loading={isPending}
             onClick={handleCompute}
             radius="lg"
-            size="lg"
+            size="md"
             variant="filled"
           >
             Compute change
           </Button>
-        </Box>
-      )}
-
-      {!hasTransactions && (
-        <Group>
-          <Button component="label" leftSection={<IconUpload size={16} />} variant="subtle">
-            Upload file
-            <input
-              accept=".txt,text/plain"
-              hidden
-              onChange={onFileChange}
-              type="file"
-            />
-          </Button>
         </Group>
-      )}
+      </Box>
+
     </Stack>
   );
 }
