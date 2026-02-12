@@ -11,10 +11,23 @@ import { IconCoin, IconCurrencyDollar } from '@tabler/icons-react';
 import { downloadOutput } from '@/lib/utils';
 
 export interface ChangeCalculatorOutputProps {
+  inputLines?: string[];
   lines: string[];
 }
 
 type DenomPart = { count: number; unit: string };
+
+/** Format raw "owed,paid" input for display: "Owed $4.00, Paid $25.00" */
+function formatInputLabel(raw: string): string {
+  const parts = raw.split(',').map((p) => p.trim()).filter(Boolean);
+  const owed = parts[0] ?? '0';
+  const paid = parts[1] ?? '0';
+  const owedNum = parseFloat(owed);
+  const paidNum = parseFloat(paid);
+  const owedStr = Number.isNaN(owedNum) ? owed : owedNum.toFixed(2);
+  const paidStr = Number.isNaN(paidNum) ? paid : paidNum.toFixed(2);
+  return `Owed $${owedStr}, Paid $${paidStr}`;
+}
 
 function parseChangeLine(line: string): DenomPart[] | null {
   if (!line.trim()) return null;
@@ -61,25 +74,48 @@ function DenomChip({ count, unit }: DenomPart) {
   );
 }
 
-function ChangeLine({ line }: { line: string }) {
+function ChangeLine({
+  inputLabel,
+  line,
+}: {
+  inputLabel?: string;
+  line: string;
+}) {
   const parts = parseChangeLine(line);
   if (!parts) {
     return (
-      <Text c="dimmed" size="sm">
-        {line || '\u00A0'}
-      </Text>
+      <Stack gap={4}>
+        {inputLabel && (
+          <Text c="dimmed" size="xs">
+            {inputLabel}
+          </Text>
+        )}
+        <Text c="dimmed" size="sm">
+          {line || '\u00A0'}
+        </Text>
+      </Stack>
     );
   }
   return (
-    <Group gap="xs" wrap="wrap">
-      {parts.map((p, i) => (
-        <DenomChip count={p.count} key={i} unit={p.unit} />
-      ))}
-    </Group>
+    <Stack gap={4}>
+      {inputLabel && (
+        <Text c="dimmed" size="xs">
+          {inputLabel}
+        </Text>
+      )}
+      <Group gap="xs" wrap="wrap">
+        {parts.map((p, i) => (
+          <DenomChip count={p.count} key={i} unit={p.unit} />
+        ))}
+      </Group>
+    </Stack>
   );
 }
 
-export function ChangeCalculatorOutput({ lines }: ChangeCalculatorOutputProps) {
+export function ChangeCalculatorOutput({
+  inputLines = [],
+  lines,
+}: ChangeCalculatorOutputProps) {
   return (
     <Paper p="md" radius="md" shadow="sm" withBorder>
       <Stack gap="md">
@@ -113,7 +149,15 @@ export function ChangeCalculatorOutput({ lines }: ChangeCalculatorOutputProps) {
         </Box>
         <Stack gap="md">
           {lines.map((line, i) => (
-            <ChangeLine key={i} line={line} />
+            <ChangeLine
+              inputLabel={
+                inputLines[i]
+                  ? `Transaction ${i + 1}: ${formatInputLabel(inputLines[i])}`
+                  : undefined
+              }
+              key={i}
+              line={line}
+            />
           ))}
         </Stack>
       </Stack>

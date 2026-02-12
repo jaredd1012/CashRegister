@@ -17,22 +17,61 @@ const RegisterInput = dynamic(() => import('./RegisterInput').then((m) => ({ def
 
 type InputMode = 'keypad' | 'text';
 
+function transactionsToText(tx: TransactionPair[]): string {
+  return tx.map((t) => `${t.owed},${t.paid}`).join('\n');
+}
+
+function textToTransactions(text: string): TransactionPair[] {
+  return text
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const [owed = '0', paid = '0'] = line.split(',').map((s) => s.trim());
+      return { owed, paid };
+    });
+}
+
 export function ChangeCalculator() {
+  const [lastInput, setLastInput] = useState('');
   const [mode, setMode] = useState<InputMode>('text');
-  const [transactions, setTransactions] = useState<TransactionPair[]>([]);
   const [textInput, setTextInput] = useState('');
+  const [transactions, setTransactions] = useState<TransactionPair[]>([]);
   const mutation = useComputeChangeMutation();
 
   const handleSubmit = useCallback(
-    (inputText: string) => mutation.mutate(inputText.trim()),
+    (inputText: string) => {
+      const trimmed = inputText.trim();
+      mutation.mutate(trimmed, {
+        onSuccess: () => setLastInput(trimmed),
+      });
+    },
     [mutation]
   );
 
   const handleAddLine = useCallback(() => {
-    setTextInput((prev) => (prev.trim() ? `${prev.trim()}\n0.00,0.00` : '0.00,0.00'));
+    setTextInput((prev) => `${prev}\n`);
   }, []);
 
+  const handleModeChange = useCallback(
+    (nextMode: string) => {
+      if (nextMode === 'text' && transactions.length > 0) {
+        setTextInput(transactionsToText(transactions));
+      } else if (nextMode === 'keypad' && textInput.trim()) {
+        const parsed = textToTransactions(textInput);
+        if (parsed.length > 0) {
+          setTransactions(parsed);
+        }
+      }
+      setMode(nextMode as InputMode);
+    },
+    [textInput, transactions]
+  );
+
   const outputLines = mutation.data?.lines ?? [];
+  const inputLines = lastInput
+    ? lastInput.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    : [];
   const hasOutput = outputLines.length > 0;
 
   useEffect(() => {
@@ -51,7 +90,7 @@ export function ChangeCalculator() {
               { label: 'Text', value: 'text' },
               { label: 'Keypad', value: 'keypad' },
             ]}
-            onChange={(v) => setMode(v as InputMode)}
+            onChange={(v) => handleModeChange(v)}
             radius="lg"
             value={mode}
           />
@@ -80,7 +119,10 @@ export function ChangeCalculator() {
       </Grid.Col>
       <Grid.Col span={{ base: 12, lg: 6 }}>
         {hasOutput ? (
-          <ChangeCalculatorOutput lines={outputLines} />
+          <ChangeCalculatorOutput
+            inputLines={inputLines}
+            lines={outputLines}
+          />
         ) : (
           <ChangeCalculatorEmptyState />
         )}

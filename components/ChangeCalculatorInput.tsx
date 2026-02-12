@@ -1,4 +1,4 @@
-import { Box, Button, Group, Stack, Textarea } from '@mantine/core';
+import { Box, Button, Group, Stack, TextInput } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 
 export interface ChangeCalculatorInputProps {
@@ -18,6 +18,15 @@ export function ChangeCalculatorInput({
   onSubmit,
   value,
 }: ChangeCalculatorInputProps) {
+  const lines = value.split(/\r?\n/);
+  const hasContent = lines.some((l) => l.trim().length > 0);
+
+  const handleLineChange = (index: number, lineValue: string) => {
+    const next = [...lines];
+    next[index] = lineValue;
+    onChange(next.join('\n'));
+  };
+
   return (
     <Box
       style={{
@@ -28,17 +37,22 @@ export function ChangeCalculatorInput({
       }}
     >
       <Stack gap="md">
-        <Textarea
-          autosize
-          label="One line per transaction"
-          minRows={1}
-          onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={PLACEHOLDER}
-          value={value}
-        />
+        <Stack gap="xs">
+          <Box component="label" size="sm" style={{ fontWeight: 500 }}>
+            One line per transaction
+          </Box>
+          {lines.map((line, i) => (
+            <TextInput
+              key={i}
+              onChange={(e) => handleLineChange(i, e.currentTarget.value)}
+              placeholder={PLACEHOLDER}
+              value={line}
+            />
+          ))}
+        </Stack>
         <Group gap="sm">
           <Button
-            disabled={!value.trim()}
+            disabled={!hasContent}
             loading={isPending}
             onClick={onSubmit}
             radius="lg"
