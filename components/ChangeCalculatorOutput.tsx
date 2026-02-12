@@ -7,12 +7,13 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import { IconCoin, IconCurrencyDollar } from '@tabler/icons-react';
+import { IconCoin, IconCurrencyDollar, IconTrash } from '@tabler/icons-react';
 import { downloadOutput } from '@/lib/utils';
 
 export interface ChangeCalculatorOutputProps {
   inputLines?: string[];
   lines: string[];
+  onClear?: () => void;
 }
 
 type DenomPart = { count: number; unit: string };
@@ -115,6 +116,7 @@ function ChangeLine({
 export function ChangeCalculatorOutput({
   inputLines = [],
   lines,
+  onClear,
 }: ChangeCalculatorOutputProps) {
   return (
     <Paper p="md" radius="md" shadow="sm" withBorder>
@@ -145,6 +147,16 @@ export function ChangeCalculatorOutput({
             >
               Download .txt
             </Button>
+            {onClear && (
+              <Button
+                leftSection={<IconTrash size={14} />}
+                onClick={onClear}
+                size="xs"
+                variant="subtle"
+              >
+                Clear
+              </Button>
+            )}
           </Box>
         </Box>
         <Stack gap="md">

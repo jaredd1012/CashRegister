@@ -2,7 +2,7 @@
 
 import { Grid, SegmentedControl, Stack } from '@mantine/core';
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useComputeChangeMutation } from '@/hooks/calculatorMutations';
 import type { TransactionPair } from './RegisterInput';
 import { ChangeCalculatorEmptyState } from './ChangeCalculatorEmptyState';
@@ -33,7 +33,8 @@ function textToTransactions(text: string): TransactionPair[] {
 }
 
 export function ChangeCalculator() {
-  const [lastInput, setLastInput] = useState('');
+  const [displayedInputLines, setDisplayedInputLines] = useState<string[]>([]);
+  const [displayedOutputLines, setDisplayedOutputLines] = useState<string[]>([]);
   const [mode, setMode] = useState<InputMode>('text');
   const [textInput, setTextInput] = useState('');
   const [transactions, setTransactions] = useState<TransactionPair[]>([]);
@@ -42,8 +43,24 @@ export function ChangeCalculator() {
   const handleSubmit = useCallback(
     (inputText: string) => {
       const trimmed = inputText.trim();
-      mutation.mutate(trimmed, {
-        onSuccess: () => setLastInput(trimmed),
+      const allLines = trimmed
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const validLines = allLines.filter((line) => {
+        const parts = line.split(',').map((p) => p.trim());
+        if (parts.length < 2) return false;
+        const owed = parseFloat(parts[0]);
+        const paid = parseFloat(parts[1]);
+        return !Number.isNaN(owed) && !Number.isNaN(paid) && owed >= 0 && paid >= 0;
+      });
+      const toSend = validLines.join('\n');
+      if (!toSend) return;
+      mutation.mutate(toSend, {
+        onSuccess: (data) => {
+          setDisplayedOutputLines(data.lines);
+          setDisplayedInputLines(validLines);
+        },
       });
     },
     [mutation]
@@ -52,6 +69,14 @@ export function ChangeCalculator() {
   const handleAddLine = useCallback(() => {
     setTextInput((prev) => `${prev}\n`);
   }, []);
+
+  const handleClearOutput = useCallback(() => {
+    mutation.reset();
+    setDisplayedInputLines([]);
+    setDisplayedOutputLines([]);
+    setTextInput('');
+    setTransactions([]);
+  }, [mutation]);
 
   const handleModeChange = useCallback(
     (nextMode: string) => {
@@ -68,17 +93,9 @@ export function ChangeCalculator() {
     [textInput, transactions]
   );
 
-  const outputLines = mutation.data?.lines ?? [];
-  const inputLines = lastInput
-    ? lastInput.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-    : [];
+  const outputLines = displayedOutputLines;
+  const inputLines = displayedInputLines;
   const hasOutput = outputLines.length > 0;
-
-  useEffect(() => {
-    if (mutation.isSuccess && hasOutput) {
-      setTransactions([]);
-    }
-  }, [mutation.isSuccess, hasOutput]);
 
   return (
     <Grid gutter="lg">
@@ -107,6 +124,7 @@ export function ChangeCalculator() {
               onAddLine={handleAddLine}
               onChange={setTextInput}
               onSubmit={() => handleSubmit(textInput)}
+              outputLines={outputLines}
               value={textInput}
             />
           )}
@@ -122,6 +140,7 @@ export function ChangeCalculator() {
           <ChangeCalculatorOutput
             inputLines={inputLines}
             lines={outputLines}
+            onClear={handleClearOutput}
           />
         ) : (
           <ChangeCalculatorEmptyState />

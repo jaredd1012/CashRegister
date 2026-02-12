@@ -14,7 +14,6 @@ import {
 import {
   IconBell,
   IconCalculator,
-  IconChartBar,
   IconDashboard,
   IconMail,
   IconReceipt,
@@ -29,7 +28,6 @@ const NAV_ITEMS = [
   { href: '/', icon: IconDashboard, label: 'Dashboard' },
   { href: '/calculator', icon: IconCalculator, label: 'Calculator' },
   { href: '/transactions', icon: IconReceipt, label: 'Transactions' },
-  { href: '/statistics', icon: IconChartBar, label: 'Statistics' },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
