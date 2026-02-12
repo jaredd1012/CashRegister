@@ -32,9 +32,12 @@ function textToTransactions(text: string): TransactionPair[] {
     });
 }
 
+const INSUFFICIENT_PAYMENT = 'Insufficient payment';
+
 export function ChangeCalculator() {
   const [displayedInputLines, setDisplayedInputLines] = useState<string[]>([]);
   const [displayedOutputLines, setDisplayedOutputLines] = useState<string[]>([]);
+  const [insufficientPaymentError, setInsufficientPaymentError] = useState(false);
   const [mode, setMode] = useState<InputMode>('text');
   const [textInput, setTextInput] = useState('');
   const [transactions, setTransactions] = useState<TransactionPair[]>([]);
@@ -42,6 +45,7 @@ export function ChangeCalculator() {
 
   const handleSubmit = useCallback(
     (inputText: string) => {
+      setInsufficientPaymentError(false);
       const trimmed = inputText.trim();
       const allLines = trimmed
         .split(/\r?\n/)
@@ -58,6 +62,13 @@ export function ChangeCalculator() {
       if (!toSend) return;
       mutation.mutate(toSend, {
         onSuccess: (data) => {
+          const hasInsufficient = data.lines.some(
+            (line) => line === INSUFFICIENT_PAYMENT
+          );
+          if (hasInsufficient) {
+            setInsufficientPaymentError(true);
+            return;
+          }
           setDisplayedOutputLines(data.lines);
           setDisplayedInputLines(validLines);
         },
@@ -70,10 +81,16 @@ export function ChangeCalculator() {
     setTextInput((prev) => `${prev}\n`);
   }, []);
 
+  const handleDeleteLine = useCallback((formIndex: number) => {
+    const lines = textInput.split(/\r?\n/);
+    setTextInput(lines.filter((_, i) => i !== formIndex).join('\n'));
+  }, []);
+
   const handleClearOutput = useCallback(() => {
     mutation.reset();
     setDisplayedInputLines([]);
     setDisplayedOutputLines([]);
+    setInsufficientPaymentError(false);
     setTextInput('');
     setTransactions([]);
   }, [mutation]);
@@ -113,6 +130,7 @@ export function ChangeCalculator() {
           />
           {mode === 'keypad' ? (
             <RegisterInput
+              computedCount={displayedInputLines.length}
               isPending={mutation.isPending}
               onSubmit={handleSubmit}
               onTransactionsChange={setTransactions}
@@ -120,17 +138,23 @@ export function ChangeCalculator() {
             />
           ) : (
             <ChangeCalculatorInput
+              computedCount={displayedInputLines.length}
               isPending={mutation.isPending}
               onAddLine={handleAddLine}
               onChange={setTextInput}
+              onDeleteLine={handleDeleteLine}
               onSubmit={() => handleSubmit(textInput)}
               outputLines={outputLines}
               value={textInput}
             />
           )}
-          {mutation.isError && (
+          {(mutation.isError || insufficientPaymentError) && (
             <ChangeCalculatorError
-              message={mutation.error?.message ?? 'Unknown error'}
+              message={
+                insufficientPaymentError
+                  ? 'One or more transactions have insufficient payment (paid is less than owed). Fix amounts and try again.'
+                  : mutation.error?.message ?? 'Unknown error'
+              }
             />
           )}
         </Stack>

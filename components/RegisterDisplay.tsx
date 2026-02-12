@@ -3,17 +3,26 @@
 import { Box, Text } from '@mantine/core';
 
 export interface RegisterDisplayProps {
-  value: string;
+  isActive?: boolean;
   label?: string;
+  value: string;
 }
 
-export function RegisterDisplay({ label, value }: RegisterDisplayProps) {
+export function RegisterDisplay({
+  isActive = false,
+  label,
+  value,
+}: RegisterDisplayProps) {
+  const displayText = value || '0.00';
   return (
     <Box
       style={{
-        background: 'linear-gradient(180deg, #1a1d23 0%, #0d0f12 100%)',
-        border: '1px solid var(--mantine-color-dark-4)',
+        background: isActive
+          ? 'linear-gradient(180deg, #252a32 0%, #14171b 100%)'
+          : 'linear-gradient(180deg, #1a1d23 0%, #0d0f12 100%)',
+        border: `1px solid ${isActive ? 'var(--mantine-color-yellow-6)' : 'var(--mantine-color-dark-4)'}`,
         borderRadius: 12,
+        boxShadow: isActive ? '0 0 0 2px rgba(234, 179, 8, 0.2)' : undefined,
         padding: '1rem 1.25rem',
       }}
     >
@@ -31,7 +40,17 @@ export function RegisterDisplay({ label, value }: RegisterDisplayProps) {
           minHeight: '1.5em',
         }}
       >
-        ${value || '0.00'}
+        ${displayText}
+        {isActive && (
+          <span
+            style={{
+              borderRight: '2px solid var(--mantine-color-yellow-5)',
+              marginLeft: 2,
+            }}
+          >
+            {'\u00A0'}
+          </span>
+        )}
       </Text>
     </Box>
   );

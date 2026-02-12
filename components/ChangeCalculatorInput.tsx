@@ -1,5 +1,5 @@
-import { Box, Button, Group, Stack, TextInput } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { ActionIcon, Box, Button, Group, Stack, TextInput } from '@mantine/core';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 const ERROR_RESULTS = ['Invalid line', 'Invalid amounts', 'Insufficient payment'];
 const OWED_PLACEHOLDER = 'amount owed';
@@ -18,19 +18,38 @@ function isErrorResult(result: string): boolean {
   return ERROR_RESULTS.includes(result);
 }
 
+function isValidLine(owed: string, paid: string): boolean {
+  const o = parseFloat(owed.trim());
+  const p = parseFloat(paid.trim());
+  return !Number.isNaN(o) && !Number.isNaN(p) && o >= 0 && p >= 0;
+}
+
+/** Allow only digits and at most one decimal with 2 places. */
+function sanitizeNumeric(value: string): string {
+  const cleaned = value.replace(/[^\d.]/g, '');
+  const parts = cleaned.split('.');
+  if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('');
+  if (parts[1]?.length > 2) return (parts[0] ?? '') + '.' + (parts[1] ?? '').slice(0, 2);
+  return cleaned;
+}
+
 export interface ChangeCalculatorInputProps {
+  computedCount?: number;
   isPending: boolean;
   onAddLine: () => void;
   onChange: (value: string) => void;
+  onDeleteLine?: (index: number) => void;
   onSubmit: () => void;
   outputLines?: string[];
   value: string;
 }
 
 export function ChangeCalculatorInput({
+  computedCount = 0,
   isPending,
   onAddLine,
   onChange,
+  onDeleteLine,
   onSubmit,
   outputLines = [],
   value,
@@ -52,14 +71,14 @@ export function ChangeCalculatorInput({
   const handleOwedChange = (lineIndex: number, owed: string) => {
     const [_, paid] = parsed[lineIndex];
     const next = [...parsed];
-    next[lineIndex] = [owed, paid];
+    next[lineIndex] = [sanitizeNumeric(owed), paid];
     onChange(next.map(([o, p]) => formatLine(o, p)).join('\n'));
   };
 
   const handlePaidChange = (lineIndex: number, paid: string) => {
     const [owed] = parsed[lineIndex];
     const next = [...parsed];
-    next[lineIndex] = [owed, paid];
+    next[lineIndex] = [owed, sanitizeNumeric(paid)];
     onChange(next.map(([o, p]) => formatLine(o, p)).join('\n'));
   };
 
@@ -79,12 +98,25 @@ export function ChangeCalculatorInput({
           </Box>
           {parsed.map(([owed, paid], i) => {
             const error = getLineError(i);
+            const validBefore = parsed
+              .slice(0, i)
+              .filter(([o, p]) => isValidLine(o, p)).length;
+            const isLocked =
+              computedCount > 0 &&
+              isValidLine(owed, paid) &&
+              validBefore < computedCount;
             return (
               <Stack key={i} gap={4}>
                 <Group gap="xs" wrap="nowrap">
                   <TextInput
-                    onChange={(e) => handleOwedChange(i, e.currentTarget.value)}
+                    inputMode="decimal"
+                    onChange={
+                      isLocked
+                        ? undefined
+                        : (e) => handleOwedChange(i, e.currentTarget.value)
+                    }
                     placeholder={OWED_PLACEHOLDER}
+                    readOnly={isLocked}
                     style={{ flex: 1 }}
                     value={owed}
                   />
@@ -92,11 +124,27 @@ export function ChangeCalculatorInput({
                     ,
                   </Box>
                   <TextInput
-                    onChange={(e) => handlePaidChange(i, e.currentTarget.value)}
+                    inputMode="decimal"
+                    onChange={
+                      isLocked
+                        ? undefined
+                        : (e) => handlePaidChange(i, e.currentTarget.value)
+                    }
                     placeholder={PAID_PLACEHOLDER}
+                    readOnly={isLocked}
                     style={{ flex: 1 }}
                     value={paid}
                   />
+                  {onDeleteLine && !isLocked && i > 0 && (
+                    <ActionIcon
+                      color="red"
+                      onClick={() => onDeleteLine(i)}
+                      size="sm"
+                      variant="subtle"
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  )}
                 </Group>
                 {error && (
                   <Box

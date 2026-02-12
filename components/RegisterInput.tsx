@@ -2,21 +2,22 @@
 
 import {
   ActionIcon,
-  Badge,
   Box,
   Button,
   Group,
+  SegmentedControl,
   Stack,
   Text,
 } from '@mantine/core';
-import { IconCheck, IconTrash } from '@tabler/icons-react';
-import { useCallback, useState } from 'react';
+import { IconTrash } from '@tabler/icons-react';
+import { useCallback, useRef, useState } from 'react';
 import { RegisterDisplay } from './RegisterDisplay';
 import { RegisterKeypad } from './RegisterKeypad';
 
 export type TransactionPair = { owed: string; paid: string };
 
 export interface RegisterInputProps {
+  computedCount?: number;
   isPending: boolean;
   onSubmit: (inputText: string) => void;
   onTransactionsChange: (tx: TransactionPair[]) => void;
@@ -37,20 +38,31 @@ function parseAmount(s: string): number {
 }
 
 export function RegisterInput({
+  computedCount = 0,
   isPending,
   onSubmit,
   onTransactionsChange,
   transactions,
 }: RegisterInputProps) {
-  const hasTransactions = transactions.length > 0;
+  const inputRef = useRef<HTMLDivElement>(null);
   const [currentAmount, setCurrentAmount] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const [owedAmount, setOwedAmount] = useState<string | null>(null);
 
+  const hasTransactions = transactions.length > 0;
+  const hasCurrentPair =
+    !!owedAmount &&
+    !!currentAmount &&
+    parseAmount(owedAmount) > 0 &&
+    parseAmount(currentAmount) >= 0;
+  const canCompute = hasTransactions || hasCurrentPair;
+
+  const isOwedMode = !owedAmount;
   const displayValue = currentAmount || (owedAmount ? '' : '0.00');
   const label = owedAmount ? 'Amount paid' : 'Amount owed';
   const stepHint = owedAmount
-    ? `Owed $${parseFloat(owedAmount).toFixed(2)} set — enter paid amount, press Enter`
-    : 'Enter amount owed, press Enter or tap Amount owed';
+    ? `Owed $${parseFloat(owedAmount).toFixed(2)} set — enter paid amount or switch to edit owed`
+    : 'Enter amount owed or switch to paid after setting owed';
 
   const handleKeyPress = useCallback((key: string) => {
     if (key === 'backspace') {
@@ -68,12 +80,21 @@ export function RegisterInput({
     }
   }, [currentAmount]);
 
-  const handleClearOwed = useCallback(() => {
+  const handleSwitchToOwed = useCallback(() => {
     if (owedAmount) {
       setCurrentAmount(owedAmount);
       setOwedAmount(null);
     }
+    inputRef.current?.focus();
   }, [owedAmount]);
+
+  const handleSwitchToPaid = useCallback(() => {
+    if (!owedAmount && currentAmount && parseFloat(currentAmount) > 0) {
+      setOwedAmount(currentAmount);
+      setCurrentAmount('');
+    }
+    inputRef.current?.focus();
+  }, [currentAmount, owedAmount]);
 
   const handlePaid = useCallback(() => {
     const paid = currentAmount || '0';
@@ -93,12 +114,28 @@ export function RegisterInput({
   );
 
   const handleCompute = useCallback(() => {
-    if (transactions.length === 0) return;
-    const inputText = transactions
+    const currentPair =
+      owedAmount && currentAmount && parseAmount(owedAmount) > 0
+        ? [{ owed: owedAmount, paid: currentAmount }]
+        : [];
+    const allPairs = [...transactions, ...currentPair];
+    if (allPairs.length === 0) return;
+    const inputText = allPairs
       .map((t) => `${t.owed},${t.paid}`)
       .join('\n');
     onSubmit(inputText);
-  }, [onSubmit, transactions]);
+    if (currentPair.length > 0) {
+      onTransactionsChange([...transactions, currentPair[0]]);
+      setOwedAmount(null);
+      setCurrentAmount('');
+    }
+  }, [
+    currentAmount,
+    onTransactionsChange,
+    onSubmit,
+    owedAmount,
+    transactions,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -108,7 +145,7 @@ export function RegisterInput({
           handlePaid();
         } else if (currentAmount) {
           handleOwed();
-        } else if (hasTransactions) {
+        } else if (canCompute) {
           handleCompute();
         }
         return;
@@ -126,12 +163,12 @@ export function RegisterInput({
       }
     },
     [
+      canCompute,
       currentAmount,
       handleCompute,
       handleKeyPress,
       handleOwed,
       handlePaid,
-      hasTransactions,
       owedAmount,
     ]
   );
@@ -152,88 +189,64 @@ export function RegisterInput({
             Transactions
           </Text>
           <Stack gap={6}>
-            {transactions.map((tx, i) => (
-              <Group
-                key={i}
-                justify="space-between"
-                style={{
-                  background: 'var(--mantine-color-dark-6)',
-                  borderRadius: 8,
-                  padding: '0.5rem 0.75rem',
-                }}
-              >
-                <Text size="sm">
-                  ${parseFloat(tx.owed || '0').toFixed(2)} → $
-                  {parseFloat(tx.paid || '0').toFixed(2)}
-                </Text>
-                <ActionIcon
-                  color="red"
-                  onClick={() => handleRemoveTransaction(i)}
-                  size="sm"
-                  variant="subtle"
+            {transactions.map((tx, i) => {
+              const isLocked = i < computedCount;
+              return (
+                <Group
+                  key={i}
+                  justify="space-between"
+                  style={{
+                    background: 'var(--mantine-color-dark-6)',
+                    borderRadius: 8,
+                    padding: '0.5rem 0.75rem',
+                  }}
                 >
-                  <IconTrash size={14} />
-                </ActionIcon>
-              </Group>
-            ))}
+                  <Text size="sm">
+                    ${parseFloat(tx.owed || '0').toFixed(2)} → $
+                    {parseFloat(tx.paid || '0').toFixed(2)}
+                  </Text>
+                  {!isLocked && (
+                    <ActionIcon
+                      color="red"
+                      onClick={() => handleRemoveTransaction(i)}
+                      size="sm"
+                      variant="subtle"
+                    >
+                      <IconTrash size={14} />
+                    </ActionIcon>
+                  )}
+                </Group>
+              );
+            })}
           </Stack>
         </Box>
       )}
 
       <Box
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
         style={{
           background: 'var(--mantine-color-dark-7)',
           border: '1px solid var(--mantine-color-dark-4)',
           borderRadius: 16,
-          outline: 'none',
           padding: '1.5rem',
         }}
       >
-        {owedAmount && (
-          <Badge
-            color="green"
-            component="button"
-            leftSection={<IconCheck size={12} />}
-            mb="sm"
-            onClick={handleClearOwed}
-            size="sm"
-            variant="light"
-          >
-            Owed ${parseFloat(owedAmount).toFixed(2)} • click to change
-          </Badge>
-        )}
-        <RegisterDisplay label={label} value={displayValue} />
-        <Text c="dimmed" mt="xs" size="xs">
-          {stepHint}
-        </Text>
-        <Box mt="md">
-          <RegisterKeypad onKeyPress={handleKeyPress} />
-        </Box>
-        <Group justify="space-between" mt="lg">
-          <Group gap="sm">
-            <Button
-              disabled={!!owedAmount || !currentAmount}
-              onClick={handleOwed}
-              radius="lg"
-              size="md"
-              variant="light"
-            >
-              Amount owed
-            </Button>
-            <Button
-              disabled={!owedAmount}
-              onClick={handlePaid}
-              radius="lg"
-              size="md"
-              variant="filled"
-            >
-              Amount paid
-            </Button>
-          </Group>
+        <Group align="center" justify="space-between" mb="sm">
+          <SegmentedControl
+            data={[
+              {
+                label: owedAmount
+                  ? `Edit owed $${parseFloat(owedAmount).toFixed(2)}`
+                  : 'Amount owed',
+                value: 'owed',
+              },
+              { label: 'Amount paid', value: 'paid' },
+            ]}
+            onChange={(v) => (v === 'owed' ? handleSwitchToOwed() : handleSwitchToPaid())}
+            radius="lg"
+            value={isOwedMode ? 'owed' : 'paid'}
+          />
           <Button
-            disabled={!hasTransactions}
+            disabled={!canCompute}
             loading={isPending}
             onClick={handleCompute}
             radius="lg"
@@ -243,6 +256,27 @@ export function RegisterInput({
             Compute change
           </Button>
         </Group>
+        <Box
+          onBlur={() => setIsFocused(false)}
+          onFocus={() => setIsFocused(true)}
+          onClick={() => inputRef.current?.focus()}
+          onKeyDown={handleKeyDown}
+          ref={inputRef}
+          tabIndex={0}
+          style={{ cursor: 'text', outline: 'none' }}
+        >
+          <RegisterDisplay
+            isActive={currentAmount.length > 0 || isFocused}
+            label={label}
+            value={displayValue}
+          />
+        </Box>
+        <Text c="dimmed" mt="xs" size="xs">
+          {stepHint}
+        </Text>
+        <Box mt="md">
+          <RegisterKeypad onKeyPress={handleKeyPress} />
+        </Box>
       </Box>
 
     </Stack>
