@@ -11,8 +11,8 @@ import {
 } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
-import { RegisterDisplay } from './RegisterDisplay';
-import { RegisterKeypad } from './RegisterKeypad';
+import { RegisterDisplay } from '@/components/RegisterDisplay';
+import { RegisterKeypad } from '@/components/RegisterKeypad';
 import styles from './RegisterInput.module.css';
 
 export type TransactionPair = { owed: string; paid: string };
@@ -260,7 +260,6 @@ export function RegisterInput({
           <RegisterKeypad onKeyPress={handleKeyPress} />
         </Box>
       </Box>
-
     </Stack>
   );
 }

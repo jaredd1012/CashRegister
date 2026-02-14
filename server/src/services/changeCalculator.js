@@ -14,21 +14,32 @@ export function parseToCents(amount) {
 }
 
 /**
- * Check if owed amount (in cents) triggers the "random change" rule.
- * Only whole-dollar amounts qualify; the dollar amount must be divisible by the divisor.
+ * Check if owed and paid amounts (in cents) trigger the "random change" rule.
+ * Both must be whole-dollar amounts, and both dollar amounts must be divisible by the divisor.
  * @param {number} owedCents
- * @param {number} divisor - use random when owed is whole dollars and dollars % divisor === 0; 0 = never
+ * @param {number} paidCents
+ * @param {number} divisor - use random when owed and paid are whole dollars and both dollars % divisor === 0; 0 = never
  */
-function shouldUseRandomChange(owedCents, divisor) {
+function shouldUseRandomChange(owedCents, paidCents, divisor) {
   const d = divisor ?? CHANGE_RULES.randomDivisor;
   if (d <= 0 || owedCents <= 0) return false;
-  const hasNoCents = owedCents % 100 === 0;
-  const wholeDollars = owedCents / 100;
-  return hasNoCents && wholeDollars % d === 0;
+  const owedWholeDollars = owedCents / 100;
+  const paidWholeDollars = paidCents / 100;
+  const owedNoCents = owedCents % 100 === 0;
+  const paidNoCents = paidCents % 100 === 0;
+  return (
+    owedNoCents &&
+    paidNoCents &&
+    owedWholeDollars % d === 0 &&
+    paidWholeDollars % d === 0
+  );
 }
 
 /**
  * Counts to human-readable string: "1 dollar,2 quarters,1 nickel"
+ * @param {number[]} counts - count per denomination (same order as denominations)
+ * @param {Array<{ labelPlural: string, labelSingular: string }>} [denominations]
+ * @returns {string}
  */
 function formatChange(counts, denominations = US_DENOMINATIONS) {
   const parts = [];
@@ -44,6 +55,10 @@ function formatChange(counts, denominations = US_DENOMINATIONS) {
 
 /**
  * Minimum number of coins/bills (greedy): use largest denominations first.
+ * Requires denominations ordered by valueCents descending.
+ * @param {number} changeCents
+ * @param {Array<{ valueCents: number, labelSingular: string, labelPlural: string }>} [denominations]
+ * @returns {string}
  */
 export function minimumChange(changeCents, denominations = US_DENOMINATIONS) {
   const counts = new Array(denominations.length).fill(0);
@@ -74,11 +89,16 @@ function createSeededRandom(seed) {
  * Uses deterministic seed from owed/paid so same input → same output.
  * Pennies are only used for the remainder that cannot be made with nickels
  * (at most 4 pennies), avoiding impractical outputs like 290 pennies.
+ * Requires denominations ordered by valueCents descending.
+ * @param {number} changeCents
+ * @param {Array<{ valueCents: number, labelSingular: string, labelPlural: string }>} [denominations]
+ * @param {number|null} [seed]
+ * @returns {string}
  */
 export function randomChange(changeCents, denominations = US_DENOMINATIONS, seed = null) {
   const rand = seed != null ? createSeededRandom(seed) : Math.random;
-  const pennyIndex = denominations.findIndex((d) => d.valueCents === 1);
   const pennyRemainder = changeCents % 5; // 0–4 cents must be pennies
+  const pennyIndex = pennyRemainder > 0 ? denominations.findIndex((d) => d.valueCents === 1) : -1;
   const remainderForLarger = changeCents - pennyRemainder; // divisible by 5
   const counts = new Array(denominations.length).fill(0);
   let remaining = remainderForLarger;
@@ -95,8 +115,8 @@ export function randomChange(changeCents, denominations = US_DENOMINATIONS, seed
       : maxCount === 0
         ? 0
         : Math.floor(maxCount * (0.4 + 0.6 * rand()));
-    counts[i] = Math.min(count, maxCount);
-    remaining -= counts[i] * valueCents;
+    counts[i] = count;
+    remaining -= count * valueCents;
   }
   if (pennyIndex >= 0 && pennyRemainder > 0) {
     counts[pennyIndex] = pennyRemainder;
@@ -108,14 +128,18 @@ export function randomChange(changeCents, denominations = US_DENOMINATIONS, seed
  * Compute change string for one line: owed and paid in cents.
  * Uses deterministic seed (owed,paid) for random change so re-computing
  * preserves results for unchanged lines.
- * @param {number} randomDivisor - when owed (cents) % divisor === 0, use random; 0 = never
+ * @param {number} owedCents
+ * @param {number} paidCents
+ * @param {Array<{ valueCents: number, labelSingular: string, labelPlural: string }>} [denominations]
+ * @param {number|null} [randomDivisor] - when owed and paid (whole dollars) both % divisor === 0, use random; 0 = never
+ * @returns {string}
  */
 export function computeChangeForLine(owedCents, paidCents, denominations = US_DENOMINATIONS, randomDivisor = null) {
   const changeCents = paidCents - owedCents;
   if (changeCents < 0) return 'Insufficient payment';
   if (changeCents === 0) return 'No change';
   // Use minimum for small change (< $1) even when divisor triggers random
-  if (changeCents >= 100 && shouldUseRandomChange(owedCents, randomDivisor)) {
+  if (changeCents >= 100 && shouldUseRandomChange(owedCents, paidCents, randomDivisor)) {
     const seed = owedCents * 1000000 + paidCents;
     return randomChange(changeCents, denominations, seed);
   }
@@ -124,11 +148,15 @@ export function computeChangeForLine(owedCents, paidCents, denominations = US_DE
 
 /**
  * Process multiple lines of "owed,paid" and return array of change strings.
- * @param {string} text
- * @param {number} randomDivisor - when owed (cents) % divisor === 0, use random; 0 = never
+ * @param {string} text - newline-separated lines, each "owed,paid" (e.g. "2.00,5.00")
+ * @param {number|null} [randomDivisor] - when owed (whole dollars) % divisor === 0, use random change; 0 = never
+ * @returns {string[]} one change string per valid line
  */
 export function processInputLines(text, randomDivisor = null) {
-  const lines = String(text).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const lines = String(text)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
   const results = [];
   for (const line of lines) {
     const parts = line.split(',').map((p) => p.trim());

@@ -3,23 +3,18 @@
 import { Grid, SegmentedControl, Stack } from '@mantine/core';
 import dynamic from 'next/dynamic';
 import { useCallback, useState } from 'react';
+import { ChangeCalculatorEmptyState } from '@/components/ChangeCalculatorEmptyState';
+import { ChangeCalculatorError } from '@/components/ChangeCalculatorError';
+import { ChangeCalculatorHeader } from '@/components/ChangeCalculatorHeader';
+import { ChangeCalculatorInput } from '@/components/ChangeCalculatorInput';
+import { ChangeCalculatorOutput } from '@/components/ChangeCalculatorOutput';
+import type { TransactionPair } from '@/components/RegisterInput';
 import { useComputeChangeMutation } from '@/hooks/calculatorMutations';
-import type { TransactionPair } from './RegisterInput';
-import { ChangeCalculatorEmptyState } from './ChangeCalculatorEmptyState';
-import { ChangeCalculatorError } from './ChangeCalculatorError';
-import { ChangeCalculatorHeader } from './ChangeCalculatorHeader';
-import { ChangeCalculatorInput } from './ChangeCalculatorInput';
-import { ChangeCalculatorOutput } from './ChangeCalculatorOutput';
 
-const RegisterInput = dynamic(() => import('./RegisterInput').then((m) => ({ default: m.RegisterInput })), {
-  ssr: false,
-});
-
-type InputMode = 'keypad' | 'text';
-
-function transactionsToText(tx: TransactionPair[]): string {
-  return tx.map((t) => `${t.owed},${t.paid}`).join('\n');
-}
+const RegisterInput = dynamic(
+  () => import('@/components/RegisterInput').then((m) => ({ default: m.RegisterInput })),
+  { ssr: false }
+);
 
 function textToTransactions(text: string): TransactionPair[] {
   return text
@@ -31,6 +26,12 @@ function textToTransactions(text: string): TransactionPair[] {
       return { owed, paid };
     });
 }
+
+function transactionsToText(tx: TransactionPair[]): string {
+  return tx.map((t) => `${t.owed},${t.paid}`).join('\n');
+}
+
+type InputMode = 'keypad' | 'text';
 
 const INSUFFICIENT_PAYMENT = 'Insufficient payment';
 
@@ -107,6 +108,11 @@ export function ChangeCalculator() {
     setTransactions([]);
   }, [mutation]);
 
+  const handleKeypadTransactionsChange = useCallback((tx: TransactionPair[]) => {
+    setTextInput(transactionsToText(tx));
+    setTransactions(tx);
+  }, []);
+
   const handleModeChange = useCallback(
     (nextMode: string) => {
       if (nextMode === 'text' && transactions.length > 0) {
@@ -136,8 +142,8 @@ export function ChangeCalculator() {
           />
           <SegmentedControl
             data={[
-              { label: 'Keypad', value: 'keypad' },
               { label: 'Text', value: 'text' },
+              { label: 'Keypad', value: 'keypad' },
             ]}
             onChange={(v) => handleModeChange(v)}
             radius="lg"
@@ -148,8 +154,8 @@ export function ChangeCalculator() {
             <RegisterInput
               computedCount={displayedInputLines.length}
               isPending={mutation.isPending}
+              onTransactionsChange={handleKeypadTransactionsChange}
               onSubmit={handleSubmit}
-              onTransactionsChange={setTransactions}
               transactions={transactions}
             />
           ) : (
@@ -176,15 +182,17 @@ export function ChangeCalculator() {
         </Stack>
       </Grid.Col>
       <Grid.Col span={{ base: 12, lg: 6 }}>
-        {hasOutput ? (
-          <ChangeCalculatorOutput
-            inputLines={inputLines}
-            lines={outputLines}
-            onClear={handleClearOutput}
-          />
-        ) : (
-          <ChangeCalculatorEmptyState />
-        )}
+        <Stack gap="lg">
+          {hasOutput ? (
+            <ChangeCalculatorOutput
+              inputLines={inputLines}
+              lines={outputLines}
+              onClear={handleClearOutput}
+            />
+          ) : (
+            <ChangeCalculatorEmptyState />
+          )}
+        </Stack>
       </Grid.Col>
     </Grid>
   );

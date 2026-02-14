@@ -11,7 +11,6 @@ import {
   Text,
   useMantineColorScheme,
 } from '@mantine/core';
-import styles from './DashboardShell.module.css';
 import {
   IconBell,
   IconCalculator,
@@ -24,6 +23,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import styles from './DashboardShell.module.css';
 
 const NAV_ITEMS = [
   { href: '/', icon: IconDashboard, label: 'Dashboard' },
