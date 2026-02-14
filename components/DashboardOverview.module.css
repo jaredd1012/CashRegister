@@ -1,0 +1,50 @@
+.barTrack {
+  background: var(--mantine-color-dark-4);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+}
+
+.barFillGrape {
+  background: var(--mantine-color-grape-5);
+}
+
+.barFillGreen {
+  background: var(--mantine-color-green-5);
+}
+
+.barFillRed {
+  background: var(--mantine-color-red-5);
+}
+
+.legendDotBlue {
+  background: var(--mantine-color-blue-5);
+  border-radius: 4px;
+  height: 8px;
+  width: 8px;
+}
+
+.legendDotGrape {
+  background: var(--mantine-color-grape-5);
+  border-radius: 4px;
+  height: 8px;
+  width: 8px;
+}
+
+.legendDotGreen {
+  background: var(--mantine-color-green-5);
+  border-radius: 4px;
+  height: 8px;
+  width: 8px;
+}
+
+.legendDotRed {
+  background: var(--mantine-color-red-5);
+  border-radius: 4px;
+  height: 8px;
+  width: 8px;
+}

@@ -1,0 +1,10 @@
+.root {
+  align-items: center;
+  background: var(--mantine-color-dark-6);
+  border: 2px dashed var(--mantine-color-dark-4);
+  border-radius: var(--mantine-radius-md);
+  display: flex;
+  justify-content: center;
+  min-height: 320px;
+  padding: 2rem;
+}

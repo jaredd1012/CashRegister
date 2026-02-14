@@ -1,6 +1,7 @@
 'use client';
 
 import { Card, Grid, Group, RingProgress, Stack, Text } from '@mantine/core';
+import styles from './DashboardOverview.module.css';
 
 export function DashboardOverview() {
   return (
@@ -22,25 +23,11 @@ export function DashboardOverview() {
             />
             <Stack gap={4}>
               <Group gap="xs">
-                <div
-                  style={{
-                    background: 'var(--mantine-color-grape-5)',
-                    borderRadius: 4,
-                    height: 8,
-                    width: 8,
-                  }}
-                />
+                <div className={styles.legendDotGrape} />
                 <Text size="sm">App Visits — 2530</Text>
               </Group>
               <Group gap="xs">
-                <div
-                  style={{
-                    background: 'var(--mantine-color-blue-5)',
-                    borderRadius: 4,
-                    height: 8,
-                    width: 8,
-                  }}
-                />
+                <div className={styles.legendDotBlue} />
                 <Text size="sm">Active Users — 2530</Text>
               </Group>
             </Stack>
@@ -58,20 +45,10 @@ export function DashboardOverview() {
               <Text size="sm">37205</Text>
             </Group>
             <Group gap="xs" grow>
-              <div
-                style={{
-                  background: 'var(--mantine-color-dark-4)',
-                  borderRadius: 4,
-                  height: 8,
-                  overflow: 'hidden',
-                }}
-              >
+              <div className={styles.barTrack}>
                 <div
-                  style={{
-                    background: 'var(--mantine-color-grape-5)',
-                    height: '100%',
-                    width: '65%',
-                  }}
+                  className={`${styles.barFill} ${styles.barFillGrape}`}
+                  style={{ width: '65%' }}
                 />
               </div>
               <Text size="xs">65%</Text>
@@ -81,20 +58,10 @@ export function DashboardOverview() {
               <Text size="sm">37205</Text>
             </Group>
             <Group gap="xs" grow>
-              <div
-                style={{
-                  background: 'var(--mantine-color-dark-4)',
-                  borderRadius: 4,
-                  height: 8,
-                  overflow: 'hidden',
-                }}
-              >
+              <div className={styles.barTrack}>
                 <div
-                  style={{
-                    background: 'var(--mantine-color-green-5)',
-                    height: '100%',
-                    width: '65%',
-                  }}
+                  className={`${styles.barFill} ${styles.barFillGreen}`}
+                  style={{ width: '65%' }}
                 />
               </div>
               <Text size="xs">65%</Text>
@@ -104,20 +71,10 @@ export function DashboardOverview() {
               <Text size="sm">37205</Text>
             </Group>
             <Group gap="xs" grow>
-              <div
-                style={{
-                  background: 'var(--mantine-color-dark-4)',
-                  borderRadius: 4,
-                  height: 8,
-                  overflow: 'hidden',
-                }}
-              >
+              <div className={styles.barTrack}>
                 <div
-                  style={{
-                    background: 'var(--mantine-color-red-5)',
-                    height: '100%',
-                    width: '65%',
-                  }}
+                  className={`${styles.barFill} ${styles.barFillRed}`}
+                  style={{ width: '65%' }}
                 />
               </div>
               <Text size="xs">65%</Text>

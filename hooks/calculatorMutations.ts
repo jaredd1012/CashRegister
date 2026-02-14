@@ -7,8 +7,11 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 type ChangeResponse = { lines: string[] };
 
-async function computeChange(inputText: string): Promise<ChangeResponse> {
-  const res = await fetch(`${API_BASE}/api/change`, {
+type ComputeParams = { inputText: string; randomDivisor: number };
+
+async function computeChange({ inputText, randomDivisor }: ComputeParams): Promise<ChangeResponse> {
+  const url = `${API_BASE}/api/change?randomDivisor=${randomDivisor}`;
+  const res = await fetch(url, {
     body: inputText,
     headers: { 'Content-Type': 'text/plain' },
     method: 'POST',

@@ -39,6 +39,7 @@ export function ChangeCalculator() {
   const [displayedOutputLines, setDisplayedOutputLines] = useState<string[]>([]);
   const [insufficientPaymentError, setInsufficientPaymentError] = useState(false);
   const [mode, setMode] = useState<InputMode>('text');
+  const [randomDivisor, setRandomDivisor] = useState<number>(3);
   const [textInput, setTextInput] = useState('');
   const [transactions, setTransactions] = useState<TransactionPair[]>([]);
   const mutation = useComputeChangeMutation();
@@ -60,7 +61,7 @@ export function ChangeCalculator() {
       });
       const toSend = validLines.join('\n');
       if (!toSend) return;
-      mutation.mutate(toSend, {
+      mutation.mutate({ inputText: toSend, randomDivisor }, {
         onSuccess: (data) => {
           const hasInsufficient = data.lines.some(
             (line) => line === INSUFFICIENT_PAYMENT
@@ -69,12 +70,23 @@ export function ChangeCalculator() {
             setInsufficientPaymentError(true);
             return;
           }
-          setDisplayedOutputLines(data.lines);
+          setDisplayedOutputLines((prevOutput) => {
+            const merged: string[] = [];
+            for (let i = 0; i < data.lines.length; i++) {
+              const inputMatchesPrev = i < displayedInputLines.length && validLines[i] === displayedInputLines[i];
+              if (inputMatchesPrev && i < prevOutput.length) {
+                merged.push(prevOutput[i]);
+              } else {
+                merged.push(data.lines[i]);
+              }
+            }
+            return merged;
+          });
           setDisplayedInputLines(validLines);
         },
       });
     },
-    [mutation]
+    [mutation, randomDivisor]
   );
 
   const handleAddLine = useCallback(() => {
@@ -118,14 +130,18 @@ export function ChangeCalculator() {
     <Grid gutter="lg">
       <Grid.Col span={{ base: 12, lg: 6 }}>
         <Stack gap="lg">
-          <ChangeCalculatorHeader />
+          <ChangeCalculatorHeader
+            randomDivisor={randomDivisor}
+            setRandomDivisor={setRandomDivisor}
+          />
           <SegmentedControl
             data={[
-              { label: 'Text', value: 'text' },
               { label: 'Keypad', value: 'keypad' },
+              { label: 'Text', value: 'text' },
             ]}
             onChange={(v) => handleModeChange(v)}
             radius="lg"
+            size="md"
             value={mode}
           />
           {mode === 'keypad' ? (

@@ -1,0 +1,17 @@
+.denomChip {
+  background: var(--mantine-color-dark-6);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+}
+
+.outputActionGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.outputHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}

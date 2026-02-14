@@ -9,6 +9,7 @@ import {
 } from '@mantine/core';
 import { IconCoin, IconCurrencyDollar, IconTrash } from '@tabler/icons-react';
 import { downloadOutput } from '@/lib/utils';
+import styles from './ChangeCalculatorOutput.module.css';
 
 export interface ChangeCalculatorOutputProps {
   inputLines?: string[];
@@ -56,14 +57,7 @@ function DenomChip({ count, unit }: DenomPart) {
       ? 'var(--mantine-color-orange-6)'
       : 'var(--mantine-color-gray-4)';
   return (
-    <Group
-      gap={6}
-      style={{
-        background: 'var(--mantine-color-dark-6)',
-        borderRadius: 8,
-        padding: '0.35rem 0.6rem',
-      }}
-    >
+    <Group className={styles.denomChip} gap={6}>
       <Icon color={color} size={18} stroke={1.5} />
       <Text size="sm">
         <Text span fw={600}>
@@ -121,18 +115,11 @@ export function ChangeCalculatorOutput({
   return (
     <Paper p="md" radius="md" shadow="sm" withBorder>
       <Stack gap="md">
-        <Box
-          style={{
-            alignItems: 'center',
-            display: 'flex',
-            gap: '0.5rem',
-            justifyContent: 'space-between',
-          }}
-        >
+        <Box className={styles.outputHeader}>
           <Text fw={600} size="sm">
             Output (change to return)
           </Text>
-          <Box style={{ display: 'flex', gap: '0.5rem' }}>
+          <Box className={styles.outputActionGroup}>
             <CopyButton value={lines.join('\n')}>
               {({ copied, copy }) => (
                 <Button onClick={copy} size="xs" variant="subtle">

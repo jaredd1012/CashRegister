@@ -1,0 +1,23 @@
+.amount {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  letter-spacing: 0.05em;
+  min-height: 1.5em;
+}
+
+.cursor {
+  border-right: 2px solid var(--mantine-color-yellow-5);
+  margin-left: 2px;
+}
+
+.displayBox {
+  background: linear-gradient(180deg, #1a1d23 0%, #0d0f12 100%);
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.displayBoxActive {
+  background: linear-gradient(180deg, #252a32 0%, #14171b 100%);
+  border-color: var(--mantine-color-yellow-6);
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
+}

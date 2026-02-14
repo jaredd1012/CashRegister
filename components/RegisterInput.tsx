@@ -13,6 +13,7 @@ import { IconTrash } from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
 import { RegisterDisplay } from './RegisterDisplay';
 import { RegisterKeypad } from './RegisterKeypad';
+import styles from './RegisterInput.module.css';
 
 export type TransactionPair = { owed: string; paid: string };
 
@@ -176,15 +177,7 @@ export function RegisterInput({
   return (
     <Stack gap="lg">
       {hasTransactions && (
-        <Box
-          style={{
-            background: 'var(--mantine-color-dark-7)',
-            border: '1px solid var(--mantine-color-dark-4)',
-            borderRadius: 16,
-            overflow: 'hidden',
-            padding: '1rem',
-          }}
-        >
+        <Box className={styles.transactionsBox}>
           <Text c="dimmed" mb="xs" size="xs" tt="uppercase">
             Transactions
           </Text>
@@ -193,13 +186,9 @@ export function RegisterInput({
               const isLocked = i < computedCount;
               return (
                 <Group
+                  className={styles.transactionItem}
                   key={i}
                   justify="space-between"
-                  style={{
-                    background: 'var(--mantine-color-dark-6)',
-                    borderRadius: 8,
-                    padding: '0.5rem 0.75rem',
-                  }}
                 >
                   <Text size="sm">
                     ${parseFloat(tx.owed || '0').toFixed(2)} → $
@@ -222,14 +211,7 @@ export function RegisterInput({
         </Box>
       )}
 
-      <Box
-        style={{
-          background: 'var(--mantine-color-dark-7)',
-          border: '1px solid var(--mantine-color-dark-4)',
-          borderRadius: 16,
-          padding: '1.5rem',
-        }}
-      >
+      <Box className={styles.formBox}>
         <Group align="center" justify="space-between" mb="sm">
           <SegmentedControl
             data={[
@@ -257,13 +239,13 @@ export function RegisterInput({
           </Button>
         </Group>
         <Box
+          className={styles.inputArea}
           onBlur={() => setIsFocused(false)}
-          onFocus={() => setIsFocused(true)}
           onClick={() => inputRef.current?.focus()}
+          onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
           ref={inputRef}
           tabIndex={0}
-          style={{ cursor: 'text', outline: 'none' }}
         >
           <RegisterDisplay
             isActive={currentAmount.length > 0 || isFocused}

@@ -11,6 +11,7 @@ import {
   Text,
   useMantineColorScheme,
 } from '@mantine/core';
+import styles from './DashboardShell.module.css';
 import {
   IconBell,
   IconCalculator,
@@ -54,9 +55,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             size="sm"
           />
           <Input
+            className={styles.searchInput}
             leftSection={<IconSearch size={16} />}
             placeholder="Search here.."
-            style={{ flex: 1, maxWidth: 400 }}
             visibleFrom="sm"
           />
           <Group gap="xs">
@@ -80,12 +81,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <AppShell.Navbar p="md">
         <AppShell.Section>
-          <Text
-            fw={700}
-            mb="md"
-            size="xl"
-            style={{ color: 'var(--mantine-color-yellow-5)' }}
-          >
+          <Text className={styles.title} fw={700} mb="md" size="xl">
             Cash Register
           </Text>
         </AppShell.Section>

@@ -13,7 +13,9 @@ app.use(express.text({ type: '*/*', limit: '1mb' }));
 app.post('/api/change', async (req, res) => {
   try {
     const text = req.body ?? '';
-    const lines = processInputLines(text);
+    const divisor = parseInt(req.query.randomDivisor, 10);
+    const randomDivisor = Number.isNaN(divisor) ? 3 : divisor;
+    const lines = processInputLines(text, randomDivisor);
     if (process.env.DATABASE_URL) {
       try {
         await insertTransaction(text.trim(), lines);

@@ -1,0 +1,25 @@
+.formBox {
+  background: var(--mantine-color-dark-7);
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.inputArea {
+  cursor: text;
+  outline: none;
+}
+
+.transactionItem {
+  background: var(--mantine-color-dark-6);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.transactionsBox {
+  background: var(--mantine-color-dark-7);
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 1rem;
+}

@@ -1,0 +1,8 @@
+.searchInput {
+  flex: 1;
+  max-width: 400px;
+}
+
+.title {
+  color: var(--mantine-color-yellow-5);
+}

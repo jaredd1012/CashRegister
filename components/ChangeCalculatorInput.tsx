@@ -1,5 +1,6 @@
 import { ActionIcon, Box, Button, Group, Stack, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
+import styles from './ChangeCalculatorInput.module.css';
 
 const ERROR_RESULTS = ['Invalid line', 'Invalid amounts', 'Insufficient payment'];
 const OWED_PLACEHOLDER = 'amount owed';
@@ -83,17 +84,10 @@ export function ChangeCalculatorInput({
   };
 
   return (
-    <Box
-      style={{
-        background: 'var(--mantine-color-dark-7)',
-        border: '1px solid var(--mantine-color-dark-4)',
-        borderRadius: 16,
-        padding: '1.5rem',
-      }}
-    >
+    <Box className={styles.wrapper}>
       <Stack gap="md">
         <Stack gap="xs">
-          <Box component="label" size="sm" style={{ fontWeight: 500 }}>
+          <Box className={styles.label} component="label" size="sm">
             One line per transaction
           </Box>
           {parsed.map(([owed, paid], i) => {
@@ -109,6 +103,7 @@ export function ChangeCalculatorInput({
               <Stack key={i} gap={4}>
                 <Group gap="xs" wrap="nowrap">
                   <TextInput
+                    className={styles.inputFlex}
                     inputMode="decimal"
                     onChange={
                       isLocked
@@ -117,13 +112,13 @@ export function ChangeCalculatorInput({
                     }
                     placeholder={OWED_PLACEHOLDER}
                     readOnly={isLocked}
-                    style={{ flex: 1 }}
                     value={owed}
                   />
-                  <Box component="span" style={{ alignSelf: 'center' }}>
+                  <Box className={styles.separator} component="span">
                     ,
                   </Box>
                   <TextInput
+                    className={styles.inputFlex}
                     inputMode="decimal"
                     onChange={
                       isLocked
@@ -132,7 +127,6 @@ export function ChangeCalculatorInput({
                     }
                     placeholder={PAID_PLACEHOLDER}
                     readOnly={isLocked}
-                    style={{ flex: 1 }}
                     value={paid}
                   />
                   {onDeleteLine && !isLocked && i > 0 && (
@@ -147,10 +141,7 @@ export function ChangeCalculatorInput({
                   )}
                 </Group>
                 {error && (
-                  <Box
-                    component="span"
-                    style={{ color: 'var(--mantine-color-red-6)', fontSize: '0.75rem' }}
-                  >
+                  <Box className={styles.lineError} component="span">
                     {error}
                   </Box>
                 )}
