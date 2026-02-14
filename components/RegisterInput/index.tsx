@@ -2,6 +2,7 @@
 
 import {
   ActionIcon,
+  Alert,
   Box,
   Button,
   Group,
@@ -47,6 +48,9 @@ export function RegisterInput({
 }: RegisterInputProps) {
   const inputRef = useRef<HTMLDivElement>(null);
   const [currentAmount, setCurrentAmount] = useState('');
+  const [invalidAmountError, setInvalidAmountError] = useState<string | null>(
+    null
+  );
   const [isFocused, setIsFocused] = useState(false);
   const [owedAmount, setOwedAmount] = useState<string | null>(null);
 
@@ -59,13 +63,15 @@ export function RegisterInput({
   const canCompute = hasTransactions || hasCurrentPair;
 
   const isOwedMode = !owedAmount;
-  const displayValue = currentAmount || (owedAmount ? '' : '0.00');
+  const displayValue =
+    currentAmount || (owedAmount ? '' : isFocused ? '' : '0.00');
   const label = owedAmount ? 'Amount paid' : 'Amount owed';
   const stepHint = owedAmount
     ? `Owed $${parseFloat(owedAmount).toFixed(2)} set — enter paid amount or switch to edit owed`
     : 'Enter amount owed or switch to paid after setting owed';
 
   const handleKeyPress = useCallback((key: string) => {
+    setInvalidAmountError(null);
     if (key === 'backspace') {
       setCurrentAmount((prev) => prev.slice(0, -1));
       return;
@@ -74,6 +80,7 @@ export function RegisterInput({
   }, []);
 
   const handleOwed = useCallback(() => {
+    setInvalidAmountError(null);
     const amount = currentAmount || '0';
     if (parseAmount(amount) > 0) {
       setOwedAmount(amount);
@@ -82,6 +89,7 @@ export function RegisterInput({
   }, [currentAmount]);
 
   const handleSwitchToOwed = useCallback(() => {
+    setInvalidAmountError(null);
     if (owedAmount) {
       setCurrentAmount(owedAmount);
       setOwedAmount(null);
@@ -90,6 +98,7 @@ export function RegisterInput({
   }, [owedAmount]);
 
   const handleSwitchToPaid = useCallback(() => {
+    setInvalidAmountError(null);
     if (!owedAmount && currentAmount && parseFloat(currentAmount) > 0) {
       setOwedAmount(currentAmount);
       setCurrentAmount('');
@@ -100,11 +109,19 @@ export function RegisterInput({
   const handlePaid = useCallback(() => {
     const paid = currentAmount || '0';
     const owed = owedAmount || '0';
-    if (parseAmount(owed) > 0 || parseAmount(paid) > 0) {
-      onTransactionsChange([...transactions, { owed, paid }]);
-      setOwedAmount(null);
-      setCurrentAmount('');
+    const paidNum = parseAmount(paid);
+    const owedNum = parseAmount(owed);
+    if (owedNum <= 0 && paidNum <= 0) return;
+    if (paidNum < owedNum) {
+      setInvalidAmountError(
+        'Amount paid must be at least amount owed. Enter a valid paid amount.'
+      );
+      return;
     }
+    setInvalidAmountError(null);
+    onTransactionsChange([...transactions, { owed, paid }]);
+    setOwedAmount(null);
+    setCurrentAmount('');
   }, [currentAmount, owedAmount, onTransactionsChange, transactions]);
 
   const handleRemoveTransaction = useCallback(
@@ -119,6 +136,17 @@ export function RegisterInput({
       owedAmount && currentAmount && parseAmount(owedAmount) > 0
         ? [{ owed: owedAmount, paid: currentAmount }]
         : [];
+    if (currentPair.length > 0) {
+      const paidNum = parseAmount(currentAmount);
+      const owedNum = parseAmount(owedAmount!);
+      if (paidNum < owedNum) {
+        setInvalidAmountError(
+          'Amount paid must be at least amount owed. Enter a valid paid amount.'
+        );
+        return;
+      }
+    }
+    setInvalidAmountError(null);
     const allPairs = [...transactions, ...currentPair];
     if (allPairs.length === 0) return;
     const inputText = allPairs
@@ -181,7 +209,7 @@ export function RegisterInput({
           <Text c="dimmed" mb="xs" size="xs" tt="uppercase">
             Transactions
           </Text>
-          <Stack gap={6}>
+          <Stack className={styles.transactionsList} gap={6}>
             {transactions.map((tx, i) => {
               const isLocked = i < computedCount;
               return (
@@ -256,6 +284,11 @@ export function RegisterInput({
         <Text c="dimmed" mt="xs" size="xs">
           {stepHint}
         </Text>
+        {invalidAmountError && (
+          <Alert color="red" mt="sm" radius="md" title="Invalid amount">
+            {invalidAmountError}
+          </Alert>
+        )}
         <Box mt="md">
           <RegisterKeypad onKeyPress={handleKeyPress} />
         </Box>

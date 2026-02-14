@@ -97,7 +97,7 @@ export function ChangeCalculator() {
   const handleDeleteLine = useCallback((formIndex: number) => {
     const lines = textInput.split(/\r?\n/);
     setTextInput(lines.filter((_, i) => i !== formIndex).join('\n'));
-  }, []);
+  }, [textInput]);
 
   const handleClearOutput = useCallback(() => {
     mutation.reset();

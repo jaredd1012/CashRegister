@@ -11,6 +11,11 @@
   flex: 1;
 }
 
+.inputLocked input:disabled {
+  color: var(--mantine-color-gray-1);
+  opacity: 1;
+}
+
 .separator {
   align-self: center;
 }

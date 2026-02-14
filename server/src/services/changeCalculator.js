@@ -102,9 +102,7 @@ export function randomChange(changeCents, denominations = US_DENOMINATIONS, seed
   const remainderForLarger = changeCents - pennyRemainder; // divisible by 5
   const counts = new Array(denominations.length).fill(0);
   let remaining = remainderForLarger;
-  // Randomly allocate among dollars, quarters, dimes; nickels get remainder.
-  // Bias toward using more of larger denominations (40–100% of max) to avoid
-  // impractical results like 59 nickels for $5.
+  
   for (let i = 0; i < denominations.length; i++) {
     if (i === pennyIndex) continue;
     const { valueCents } = denominations[i];

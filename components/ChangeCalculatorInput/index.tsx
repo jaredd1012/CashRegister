@@ -103,7 +103,12 @@ export function ChangeCalculatorInput({
               <Stack key={i} gap={4}>
                 <Group gap="xs" wrap="nowrap">
                   <TextInput
-                    className={styles.inputFlex}
+                    className={
+                      isLocked
+                        ? `${styles.inputFlex} ${styles.inputLocked}`
+                        : styles.inputFlex
+                    }
+                    disabled={isLocked}
                     inputMode="decimal"
                     onChange={
                       isLocked
@@ -111,14 +116,18 @@ export function ChangeCalculatorInput({
                         : (e) => handleOwedChange(i, e.currentTarget.value)
                     }
                     placeholder={OWED_PLACEHOLDER}
-                    readOnly={isLocked}
                     value={owed}
                   />
                   <Box className={styles.separator} component="span">
                     ,
                   </Box>
                   <TextInput
-                    className={styles.inputFlex}
+                    className={
+                      isLocked
+                        ? `${styles.inputFlex} ${styles.inputLocked}`
+                        : styles.inputFlex
+                    }
+                    disabled={isLocked}
                     inputMode="decimal"
                     onChange={
                       isLocked
@@ -126,7 +135,6 @@ export function ChangeCalculatorInput({
                         : (e) => handlePaidChange(i, e.currentTarget.value)
                     }
                     placeholder={PAID_PLACEHOLDER}
-                    readOnly={isLocked}
                     value={paid}
                   />
                   {onDeleteLine && !isLocked && i > 0 && (

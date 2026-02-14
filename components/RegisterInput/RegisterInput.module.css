@@ -23,3 +23,8 @@
   overflow: hidden;
   padding: 1rem;
 }
+
+.transactionsList {
+  max-height: 7rem; /* ~2 transaction rows, then scroll */
+  overflow-y: auto;
+}
