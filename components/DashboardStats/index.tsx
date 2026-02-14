@@ -31,22 +31,22 @@ export function DashboardStats() {
     {
       color: 'blue' as const,
       icon: IconReceipt,
-      label: 'Transactions',
+      label: 'Total transactions',
       suffix: 'processed',
       value: stats.transactionCount.toLocaleString(),
     },
     {
       color: 'green' as const,
       icon: IconCurrencyDollar,
-      label: 'Total Owed',
-      suffix: 'amount charged',
+      label: 'Total earnings',
+      suffix: 'revenue (amount charged)',
       value: formatCurrency(stats.totalOwed),
     },
     {
       color: 'yellow' as const,
       icon: IconCoins,
-      label: 'Change Given',
-      suffix: 'from drawer',
+      label: 'Change returned',
+      suffix: 'given back to customers',
       value: formatCurrency(stats.changeGiven),
     },
   ];
