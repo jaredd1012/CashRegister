@@ -16,8 +16,19 @@
   padding: 1rem 1.25rem;
 }
 
+:global(html[data-mantine-color-scheme="light"]) .displayBox {
+  background: linear-gradient(180deg, var(--mantine-color-gray-1) 0%, var(--mantine-color-gray-2) 100%);
+  border-color: var(--mantine-color-gray-4);
+}
+
 .displayBoxActive {
   background: linear-gradient(180deg, #252a32 0%, #14171b 100%);
   border-color: var(--mantine-color-yellow-6);
   box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
+}
+
+:global(html[data-mantine-color-scheme="light"]) .displayBoxActive {
+  background: linear-gradient(180deg, var(--mantine-color-gray-0) 0%, var(--mantine-color-gray-1) 100%);
+  border-color: var(--mantine-color-yellow-6);
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.25);
 }

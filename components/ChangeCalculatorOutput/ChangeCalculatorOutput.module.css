@@ -4,6 +4,10 @@
   padding: 0.35rem 0.6rem;
 }
 
+:global(html[data-mantine-color-scheme="light"]) .denomChip {
+  background: var(--mantine-color-gray-1);
+}
+
 .outputActionGroup {
   display: flex;
   gap: 0.5rem;

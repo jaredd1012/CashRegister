@@ -16,6 +16,10 @@
   opacity: 1;
 }
 
+:global(html[data-mantine-color-scheme="light"]) .inputLocked input:disabled {
+  color: var(--mantine-color-gray-8);
+}
+
 .separator {
   align-self: center;
 }
@@ -25,4 +29,9 @@
   border: 1px solid var(--mantine-color-dark-4);
   border-radius: 16px;
   padding: 1.5rem;
+}
+
+:global(html[data-mantine-color-scheme="light"]) .wrapper {
+  background: var(--mantine-color-gray-0);
+  border-color: var(--mantine-color-gray-3);
 }

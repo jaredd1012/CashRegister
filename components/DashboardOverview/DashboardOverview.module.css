@@ -5,6 +5,10 @@
   overflow: hidden;
 }
 
+:global(html[data-mantine-color-scheme="light"]) .barTrack {
+  background: var(--mantine-color-gray-3);
+}
+
 .barFill {
   height: 100%;
 }

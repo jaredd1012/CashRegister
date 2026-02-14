@@ -5,6 +5,11 @@
   padding: 1.5rem;
 }
 
+:global(html[data-mantine-color-scheme="light"]) .formBox {
+  background: var(--mantine-color-gray-0);
+  border-color: var(--mantine-color-gray-3);
+}
+
 .inputArea {
   cursor: text;
   outline: none;
@@ -16,12 +21,21 @@
   padding: 0.5rem 0.75rem;
 }
 
+:global(html[data-mantine-color-scheme="light"]) .transactionItem {
+  background: var(--mantine-color-gray-1);
+}
+
 .transactionsBox {
   background: var(--mantine-color-dark-7);
   border: 1px solid var(--mantine-color-dark-4);
   border-radius: 16px;
   overflow: hidden;
   padding: 1rem;
+}
+
+:global(html[data-mantine-color-scheme="light"]) .transactionsBox {
+  background: var(--mantine-color-gray-0);
+  border-color: var(--mantine-color-gray-3);
 }
 
 .transactionsList {

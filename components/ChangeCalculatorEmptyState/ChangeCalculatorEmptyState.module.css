@@ -8,3 +8,8 @@
   min-height: 320px;
   padding: 2rem;
 }
+
+:global(html[data-mantine-color-scheme="light"]) .root {
+  background: var(--mantine-color-gray-0);
+  border-color: var(--mantine-color-gray-4);
+}
